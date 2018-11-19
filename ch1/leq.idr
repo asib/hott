@@ -52,3 +52,32 @@ lteTransitive {n} {m} (k1 ** pf1) (k2 ** pf2) =
 lteAddRight : (n : Nat) -> n <:= (n+m)
 lteAddRight Z = lteZero
 lteAddRight {m} (S k) = (m ** Refl)
+
+-- We show the following two ways of defining less than (<: and <::) are equivalent.
+infixr 6 <:
+
+(<:) : (n:Nat) -> (m:Nat) -> Type
+n <: m = (k:Nat ** n+(S k) = m)
+
+infixr 6 <::
+
+(<::) : Nat -> Nat -> Type
+n <:: m = (n <:= m, Not (n=m))
+
+plusSuccAbsurd : {k:Nat} -> {l:Nat} -> Not (k+(S l) = k)
+plusSuccAbsurd {k = Z} {l = l} eq = SIsNotZ eq
+plusSuccAbsurd {k = (S k)} {l = l} pf =
+  plusSuccAbsurd (succInjective (k+S l) k pf)
+
+lt_equiv_1 : (n:Nat) -> (m:Nat) -> n <: m -> n <:: m
+lt_equiv_1 Z m (l ** pf) =
+  ((S l ** pf), \neqm => SIsNotZ (trans pf (sym neqm)))
+lt_equiv_1 (S k) m (l ** pf) =
+  ( (S l ** pf)
+  , \pf2 => plusSuccAbsurd (succInjective (k + S l) k (trans pf (sym pf2))))
+
+lt_equiv_2 : (n:Nat) -> (m:Nat) -> n <:: m -> n <: m
+lt_equiv_2 n m ((Z ** pf), f) = absurd (f (trans (sym (plusZeroRightNeutral n)) pf))
+lt_equiv_2 n m (((S l) ** pf), f) = (l ** pf)
+
+
